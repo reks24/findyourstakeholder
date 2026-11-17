@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harbor Street: Find Your Stakeholders</title>
+<style>
+:root{--bg:#e8eef0;--panel:#f7fafb;--ink:#14262e;--mute:#5a6f77;--line:#c3d0d5;--acc:#0f6b6b;--hl:#f6d365;--bad:#b3392f;--good:#1f7a4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e171b;--panel:#16242a;--ink:#e3edf0;--mute:#93a8b0;--line:#2a3d45;--acc:#4fc3c3;--hl:#8a6d12;--bad:#ff8a7e;--good:#6fd69b}}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 48px}
+h1{font:700 28px/1.2 Georgia,"Times New Roman",serif;margin:0 0 4px}h2{font:700 20px Georgia,serif;margin:0 0 8px}
+p{margin:0 0 12px}.mute{color:var(--mute)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+button{font:inherit;cursor:pointer;border:1px solid var(--acc);background:var(--acc);color:var(--bg);padding:8px 16px;border-radius:4px}
+button.ghost{background:transparent;color:var(--acc)}button:disabled{opacity:.4;cursor:default}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.steps{display:flex;gap:6px;margin-bottom:16px}.steps span{flex:1;height:5px;background:var(--line);border-radius:3px}.steps .on{background:var(--acc)}
+.cols{display:grid;grid-template-columns:2fr 1fr;gap:16px}@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{background:transparent;color:var(--ink);border-color:var(--line)}.tabs button.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.doc{font:17px/1.7 Georgia,serif;max-width:62ch}
+.clue{background:linear-gradient(transparent 55%,var(--hl) 55%);cursor:pointer;border-radius:2px}.clue.tag{background:var(--acc);color:var(--bg);padding:0 3px}
+.reg{list-style:none;margin:0;padding:0}.reg li{padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
+.grid{display:grid;grid-template-columns:auto 1fr 1fr;grid-template-rows:auto 1fr 1fr;gap:6px}
+.ax{font-size:13px;color:var(--mute);text-align:center;align-self:center}.ax.v{writing-mode:vertical-rl;transform:rotate(180deg)}
+.cell{min-height:130px;border:2px dashed var(--line);border-radius:6px;padding:8px;cursor:pointer;background:var(--panel)}
+.cell b{display:block;font-size:14px;margin-bottom:6px}.cell.hot{border-color:var(--acc)}
+.chip{display:inline-block;margin:3px 3px 0 0;padding:4px 10px;border:1px solid var(--ink);border-radius:14px;font-size:14px;background:var(--bg);cursor:pointer}.chip.sel{background:var(--ink);color:var(--bg)}
+.tray{min-height:48px}
+.ev{border-left:5px solid var(--line);padding:6px 12px;margin:0 0 10px;background:var(--panel)}.ev.ok{border-color:var(--good)}.ev.no{border-color:var(--bad)}
+.score{font:700 44px Georgia,serif}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes slide{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+#app.enter{animation:rise .45s ease-out}
+.pop{animation:pop .35s ease-out}.clue.pop{display:inline-block}
+.chip,.cell{transition:background .2s,border-color .2s,transform .15s}.chip:hover{transform:translateY(-2px)}
+.ev{animation:slide .45s ease-out both}
+#mute{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:5;padding:4px 10px;font-size:13px;background:var(--panel)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><button id="mute" class="ghost" onclick="tg()">Sound on</button><main id="app"></main>
+<script>
+const Q={ "HH":"Manage closely","HL":"Keep satisfied","LH":"Keep informed","LL":"Monitor" };
+const S={
+sponsor:{n:"Dr. Amara Osei",r:"Medical Director, sponsor",q:"HH",ok:"Dr. Osei cleared roadblocks and kept the budget safe.",no:"Dr. Osei felt out of the loop and froze the go-live date."},
+vendor:{n:"CareLink Systems",r:"EHR vendor",q:"HH",ok:"CareLink assigned a senior engineer and delivered on time.",no:"CareLink deprioritized your tickets and the interface slipped a month."},
+union:{n:"Nurses’ union steward",r:"Represents floor staff",q:"HH",ok:"The steward co-designed shift-change training. No grievances.",no:"The steward filed a grievance over unpaid training hours and stalled the rollout."},
+cfo:{n:"CFO",r:"Approves budget",q:"HL",ok:"Short monthly updates kept the CFO satisfied and funding steady.",no:"Surprised by a change request, the CFO froze spending."},
+regulator:{n:"State Health Department",r:"Sets data rules",q:"HL",ok:"A pre-launch compliance review passed cleanly.",no:"An unreviewed data flow triggered an audit after launch."},
+nurses:{n:"Floor nurses",r:"Daily end users",q:"LH",ok:"Regular demos made nurses early adopters.",no:"Nurses first saw the system on go-live day and adoption stalled."},
+billing:{n:"Billing office",r:"Roles are redefined",q:"LH",ok:"Billing staff were reassured and helped map coding rules.",no:"Billing staff quietly resisted and kept using paper workarounds."},
+patients:{n:"Patient advisory council",r:"Wants portal access",q:"LL",ok:"A quarterly note was enough to keep the council supportive.",no:"Over-investing in the council pulled time from higher-impact groups."}};
+const D={d_vend:"Vending contractor",d_ceo:"Former CEO Marcus Hale",d_news:"Harbor Gazette"};
+const DOCS=[
+["Project charter","Harbor Street Clinic will replace paper charts with an electronic health record by March. The project is sponsored by [[sponsor|Dr. Amara Osei, Medical Director]]. The $1.2M budget was approved by [[cfo|the CFO]], who expects no overruns. The rollout covers [[nurses|all floor nurses]] and the front desk. The cafeteria’s [[d_vend|vending contractor]] will lose a storage closet to server racks."],
+["Vendor contract","The software is licensed from [[vendor|CareLink Systems]], who commit to training and 24/7 support. All patient data handling must meet rules enforced by [[regulator|the State Health Department]]. [[d_ceo|Marcus Hale]] signed the original letter of intent in 2019 and has since retired."],
+["Org chart notes","Billing staff move from manual entry to automated coding, and two roles are redefined. [[billing|The billing office]] was not invited to the kickoff meeting. A story in [[d_news|the Harbor Gazette]] covered the clinic’s 2021 parking dispute."],
+["Meeting notes","Action item: confirm shift-change training with [[union|the nurses’ union steward]], who raised overtime concerns in a footnote. Also noted: [[patients|the patient advisory council]] asked for portal access once the system is live."]];
+let st={ph:0,doc:0,tag:new Set(),place:{},sel:null};
+let AC,muted=false,lastPh=-1;
+function tone(f,d,t,v,delay,slide){if(muted)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=="suspended")AC.resume();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+(delay||0);o.type=t||"sine";o.frequency.setValueAtTime(f,s);if(slide)o.frequency.exponentialRampToValueAtTime(slide,s+d);g.gain.setValueAtTime(v||.1,s);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d)}catch(e){}}
+const sfx={tag:()=>tone(660,.15,"triangle",.14,0,990),untag:()=>tone(440,.12,"triangle",.1,0,300),pick:()=>tone(520,.08,"square",.04),place:()=>{tone(300,.12,"sine",.15,0,150);tone(600,.08,"triangle",.06,.05)},good:()=>{tone(523,.15,"triangle",.12);tone(784,.25,"triangle",.12,.1)},bad:()=>tone(200,.3,"sawtooth",.07,0,120),win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.3,"triangle",.12,i*.12)),next:()=>tone(400,.2,"sine",.1,0,800)};
+function tg(){muted=!muted;document.getElementById("mute").textContent=muted?"Sound off":"Sound on";if(!muted)sfx.pick()}
+function fin(sc,max){if(!matchMedia("(prefers-reduced-motion: reduce)").matches){const el=document.querySelector(".score");let n=0;const t=setInterval(()=>{n=Math.min(sc,n+Math.ceil(sc/30));el.textContent=n+" / "+max;if(n>=sc)clearInterval(t)},30)}
+document.querySelectorAll(".ev").forEach((e,i)=>{const ms=(.5+i*.35)*1000;e.style.animationDelay=ms+"ms";setTimeout(()=>e.classList.contains("ok")?sfx.good():e.classList.contains("no")?sfx.bad():0,ms)});if(sc>=96)setTimeout(sfx.win,200)}
+const $=h=>{const e=document.getElementById("app");e.innerHTML=h;if(st.ph!==lastPh){lastPh=st.ph;e.classList.remove("enter");void e.offsetWidth;e.classList.add("enter")}};
+const steps=()=>`<div class="steps">${[0,1,2,3].map(i=>`<span class="${i<=st.ph?"on":""}"></span>`).join("")}</div>`;
+function intro(){$(`${steps()}<h1>Harbor Street: find your stakeholders</h1><p class="mute">You are the project manager of an electronic health record rollout at a small clinic.</p><div class="panel"><p><b>1. Investigate.</b> Read four project documents and tag every person or group with a stake in the project. Highlighted phrases are clickable. Some highlighted phrases belong to people or groups with no real stake, and each one you tag costs points.</p><p><b>2. Map.</b> Place each stakeholder on the power/interest grid.</p><p><b>3. Debrief.</b> See how your engagement plan played out.</p><button onclick="sfx.next();st.ph=1;inv()">Open the case file</button></div>`)}
+function inv(){const d=DOCS[st.doc];
+const txt=d[1].replace(/\[\[(\w+)\|([^\]]+)\]\]/g,(m,id,t)=>`<span class="clue ${st.tag.has(id)?"tag":""} ${st.last==id&&st.tag.has(id)?"pop":""}" role="button" tabindex="0" data-id="${id}" aria-pressed="${st.tag.has(id)}">${t}</span>`);
+$(`${steps()}<h2>Investigate the documents</h2><div class="cols"><div class="panel"><div class="tabs">${DOCS.map((x,i)=>`<button class="${i==st.doc?"sel":""}" onclick="st.doc=${i};st.last=null;inv()">${x[0]}</button>`).join("")}</div><div class="doc">${txt}</div></div><div class="panel"><h2>Your register</h2><ul class="reg">${[...st.tag].map(i=>`<li>${(S[i]||{}).n||D[i]}</li>`).join("")||'<li class="mute">Nothing tagged yet. Click a highlighted phrase.</li>'}</ul><div class="bar"><button ${st.tag.size?"":"disabled"} onclick="goMap()">Map ${st.tag.size} stakeholders</button></div></div></div>`);
+document.querySelectorAll(".clue").forEach(c=>{const f=()=>{const i=c.dataset.id;if(st.tag.has(i)){st.tag.delete(i);sfx.untag()}else{st.tag.add(i);sfx.tag()}st.last=i;inv()};c.onclick=f;c.onkeydown=e=>{if(e.key=="Enter"||e.key==" "){e.preventDefault();f()}}})}
+function goMap(){sfx.next();st.ph=2;st.sel=null;st.last=null;map()}
+function map(){const t=[...st.tag];const un=t.filter(i=>!st.place[i]);
+const cell=q=>`<div class="cell" data-q="${q}" role="button" tabindex="0"><b>${Q[q]}</b>${t.filter(i=>st.place[i]==q).map(i=>chip(i)).join("")}</div>`;
+const chip=i=>`<span class="chip ${st.sel==i?"sel":""} ${st.last==i?"pop":""}" data-c="${i}" role="button" tabindex="0">${(S[i]||{}).n||D[i]}</span>`;
+$(`${steps()}<h2>Map the room</h2><p class="mute">Choose a card, then choose a quadrant. Choose a placed card to pick it up again.</p><div class="panel tray">${un.map(chip).join("")||'<span class="mute">All stakeholders placed.</span>'}</div><div class="grid" style="margin-top:12px"><span></span><span class="ax">Low interest</span><span class="ax">High interest</span><span class="ax v">High power</span>${cell("HL")}${cell("HH")}<span class="ax v">Low power</span>${cell("LL")}${cell("LH")}</div><div class="bar"><button class="ghost" onclick="st.ph=1;inv()">Back to documents</button><button ${un.length?"disabled":""} onclick="st.ph=3;end()">Run the project</button></div>`);
+document.querySelectorAll("[data-c]").forEach(c=>{const f=e=>{e.stopPropagation();const i=c.dataset.c;if(st.place[i]){delete st.place[i];st.sel=i}else st.sel=i;st.last=null;sfx.pick();map()};c.onclick=f;c.onkeydown=e=>{if(e.key=="Enter"||e.key==" "){e.preventDefault();f(e)}}});
+document.querySelectorAll(".cell").forEach(c=>{const f=()=>{if(st.sel){st.place[st.sel]=c.dataset.q;st.last=st.sel;st.sel=null;sfx.place();map()}};c.onclick=f;c.onkeydown=e=>{if(e.key=="Enter"||e.key==" "){e.preventDefault();f()}}})}
+function end(){let found=0,corr=0,dec=0,ev="",miss="";
+Object.keys(S).forEach(i=>{if(st.tag.has(i)){found++;const ok=st.place[i]==S[i].q;if(ok)corr++;ev+=`<div class="ev ${ok?"ok":"no"}"><b>${S[i].n}</b>${ok?"":` (you chose ${Q[st.place[i]]}; best fit: ${Q[S[i].q]})`}<br>${ok?S[i].ok:S[i].no}</div>`}else miss+=`<div class="ev no"><b>${S[i].n}</b> (${S[i].r}) was never identified. They surfaced late and demanded changes. Check: ${S[i].q=="HH"?"a high-power, high-interest group is the costliest one to miss.":"which document mentioned them?"}</div>`});
+[...st.tag].forEach(i=>{if(D[i])dec++});
+const sc=Math.max(0,found*10+corr*10-dec*5),max=160;
+const rank=sc>=max*.9?"Seasoned PM":sc>=max*.6?"Capable coordinator":"Keep practicing";
+$(`${steps()}<h1>Project debrief</h1><div class="panel"><div class="score">${sc} / ${max}</div><p><b>${rank}</b>. You found ${found} of 8 stakeholders, placed ${corr} correctly, and tagged ${dec} ${dec==1?"phrase":"phrases"} with no real stake.</p></div><h2 style="margin-top:20px">What happened</h2>${ev}${miss}${dec?`<div class="ev"><b>Tagged with no real stake:</b> ${[...st.tag].filter(i=>D[i]).map(i=>D[i]).join(", ")} are not affected by the project and cannot influence it. A register full of noise wastes engagement effort.</div>`:""}<p class="mute">PMBOK reminder: identification repeats throughout the project. The register should be updated whenever the scope, team or environment changes.</p><div class="bar"><button onclick="st={ph:0,doc:0,tag:new Set(),place:{},sel:null};intro()">Play again</button></div>`);fin(sc,max)}
+intro();
+</script></body></html>
